@@ -1,0 +1,8 @@
+{
+  "name": "guvna-rules",
+  "description": "Agent governance plugin — blocks unsafe commands, enforces protected paths, auto-formats and typechecks edits. Works standalone or with the guvna GitHub App for full PR-level governance.",
+  "author": {
+    "name": "boilerpot",
+    "url": "https://github.com/boilerpot"
+  }
+}
