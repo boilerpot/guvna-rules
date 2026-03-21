@@ -33,6 +33,16 @@
           }
         ],
         "matcher": "Edit|Write|MultiEdit"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/codex-review.sh",
+            "timeout": 5
+          }
+        ],
+        "matcher": "Bash"
       }
     ],
     "InstructionsLoaded": [
