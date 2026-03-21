@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "brain": {
+      "type": "sse",
+      "url": "${BRAIN_URL:-https://brain.sporo.live}/mcp/sse",
+      "headers": {
+        "x-api-key": "${BRAIN_API_KEY}"
+      }
+    }
+  }
+}
