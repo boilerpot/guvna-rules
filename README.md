@@ -1,45 +1,49 @@
 # guvna-rules
 
-Claude Code plugin for agent governance. Blocks unsafe commands, enforces protected paths, auto-formats and typechecks edits.
+Claude Code plugin for agent governance. Blocks unsafe commands, enforces policy, auto-formats, typechecks, and dispatches independent code reviews via Codex.
 
-Part of the [guvna](https://github.com/boilerpot/guvna) governance platform. Works standalone or paired with the guvna GitHub App for full PR-level enforcement.
+Works standalone or paired with the [guvna](https://github.com/boilerpot/guvna) GitHub App for full PR-level enforcement.
 
 ## Install
 
+Add as a custom marketplace, then install:
+
 ```bash
-claude plugin add boilerpot/guvna-rules
+claude plugin marketplace add boilerpot/guvna-rules
+claude plugin install guvna-rules@guvna-rules
 ```
 
-Or add to your project's `.claude/plugins.json`:
-```json
-{
-  "plugins": [
-    { "git": "https://github.com/boilerpot/guvna-rules" }
-  ]
-}
+Or load per-session:
+
+```bash
+claude --plugin-dir /path/to/guvna-rules
 ```
 
 ## What it does
 
-### Security hooks (PreToolUse:Bash)
+### Security (PreToolUse:Bash)
 
-| Rule | What's blocked |
-|------|---------------|
+| Rule | Blocked |
+|------|---------|
 | Destructive git | `git push --force`, `git rebase`, `git reset`, `git restore`, `git clean` |
 | PR bypass | `gh pr merge`, `gh pr close`, direct API merges |
-| Secret access | `.env`, `.pem`, `.key`, `.secret`, `.cert` files (templates allowed) |
-| Eval/exec | `eval`, standalone `exec` (package manager exec allowed) |
+| Secret access | `.env`, `.pem`, `.key`, `.secret`, `.cert` (templates allowed) |
+| Eval/exec | `eval`, standalone `exec` (pnpm/npx/yarn exec allowed) |
 | External network | `curl`/`wget`/`nc` to non-localhost URLs |
 | Custom deny | Patterns from `guvna.yml` and `.guvna-rules.yml` |
 
-### Code quality hooks (PostToolUse:Edit|Write)
+### Code quality (PostToolUse:Edit|Write)
 
-- **Prettier** — auto-formats supported files after edits
-- **TypeScript** — runs typecheck scoped to the edited package
+- **Prettier** — auto-formats after edits (disable: `prettier: false` in `.guvna-rules.yml`)
+- **TypeScript** — scoped typecheck after `.ts`/`.tsx` edits (disable: `typecheck: false`)
+
+### Independent review (PostToolUse:Bash)
+
+- **Codex review** — after `git commit`, backgrounds `codex review --commit HEAD`. Output goes to `/tmp/codex-review-<sha>.md` and posts to PR if one exists. Never enters context. (disable: `codex-review: false`)
 
 ### Doc validation (InstructionsLoaded)
 
-- Scans `CLAUDE.md` for referenced file paths and warns about missing files
+- Scans `CLAUDE.md` for backtick-quoted file paths and warns about missing references.
 
 ## Configuration
 
@@ -49,7 +53,6 @@ Or add to your project's `.claude/plugins.json`:
 protected:
   - ".github/workflows/**"
   - "src/auth/**"
-  - "migrations/**"
 reviewers:
   - security-team
 deny:
@@ -63,9 +66,14 @@ deny:
 prettier: true
 typecheck: true
 typecheck-command: "pnpm typecheck"
+codex-review: true
 deny:
   - "rm -rf"
 ```
+
+### Brain (optional)
+
+Set `BRAIN_URL` and `BRAIN_API_KEY` env vars to connect to a hosted brain instance. Agents get semantic search over past work via MCP tools. The plugin works fully without brain.
 
 ## Skills
 
@@ -74,18 +82,20 @@ deny:
 | `guvna-policy` | model-invoked | Governance rules injected into model context |
 | `/guvna-init` | user-invoked | Create starter `guvna.yml` for your repo |
 | `/guvna-check` | user-invoked | Audit governance setup and find gaps |
+| `/codex-review` | user-invoked | On-demand independent review via Codex |
 
 ## Architecture
 
 ```
-guvna-rules (this plugin)     guvna (GitHub App)
-  ├── gates coding sessions     ├── gates pull requests
-  ├── blocks unsafe commands    ├── risk classification
-  ├── enforces deny patterns    ├── review enforcement
-  └── auto-format/typecheck     └── reviewer auto-request
+guvna-rules (this plugin)       guvna (GitHub App)
+  gates coding sessions           gates pull requests
+  blocks unsafe commands          risk classification
+  enforces deny patterns          review enforcement
+  auto-format + typecheck         reviewer auto-request
+  codex independent review        ntfy push notifications
 ```
 
-Both read from `guvna.yml` for shared policy. The plugin enforces during coding; the App enforces at PR time.
+Both read `guvna.yml`. The plugin enforces during coding; the App enforces at PR time.
 
 ## License
 
