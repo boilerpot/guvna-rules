@@ -38,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/codex-review.sh",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/independent-review.sh",
             "timeout": 5
           }
         ],
