@@ -1,6 +1,6 @@
 # guvna-rules
 
-Claude Code plugin for agent governance. Blocks unsafe commands, enforces policy, auto-formats, typechecks, and dispatches independent code reviews via Codex.
+Claude Code plugin for agent governance. Blocks unsafe commands, enforces policy, auto-formats, and typechecks edits.
 
 Works standalone or paired with the [guvna](https://github.com/boilerpot/guvna) GitHub App for full PR-level enforcement.
 
@@ -34,12 +34,8 @@ claude --plugin-dir /path/to/guvna-rules
 
 ### Code quality (PostToolUse:Edit|Write)
 
-- **Prettier** — auto-formats after edits (disable: `prettier: false` in `.guvna-rules.yml`)
+- **Prettier** — auto-formats after edits (disable: `prettier: false`)
 - **TypeScript** — scoped typecheck after `.ts`/`.tsx` edits (disable: `typecheck: false`)
-
-### Independent review (PostToolUse:Bash)
-
-- **Codex review** — after `git commit`, backgrounds `codex review --commit HEAD`. Output goes to `/tmp/codex-review-<sha>.md` and posts to PR if one exists. Never enters context. (disable: `codex-review: false`)
 
 ### Doc validation (InstructionsLoaded)
 
@@ -66,14 +62,9 @@ deny:
 prettier: true
 typecheck: true
 typecheck-command: "pnpm typecheck"
-codex-review: true
 deny:
   - "rm -rf"
 ```
-
-### Brain (optional)
-
-Set `BRAIN_URL` and `BRAIN_API_KEY` env vars to connect to a hosted brain instance. Agents get semantic search over past work via MCP tools. The plugin works fully without brain.
 
 ## Skills
 
@@ -82,7 +73,6 @@ Set `BRAIN_URL` and `BRAIN_API_KEY` env vars to connect to a hosted brain instan
 | `guvna-policy` | model-invoked | Governance rules injected into model context |
 | `/guvna-init` | user-invoked | Create starter `guvna.yml` for your repo |
 | `/guvna-check` | user-invoked | Audit governance setup and find gaps |
-| `/codex-review` | user-invoked | On-demand independent review via Codex |
 
 ## Architecture
 
@@ -92,7 +82,6 @@ guvna-rules (this plugin)       guvna (GitHub App)
   blocks unsafe commands          risk classification
   enforces deny patterns          review enforcement
   auto-format + typecheck         reviewer auto-request
-  codex independent review        ntfy push notifications
 ```
 
 Both read `guvna.yml`. The plugin enforces during coding; the App enforces at PR time.
