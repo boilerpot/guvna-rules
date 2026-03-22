@@ -24,13 +24,23 @@ if ! command -v codex > /dev/null 2>&1; then
   exit 0
 fi
 
-# Check .guvna-rules.yml — codex-review can be disabled
+# Check .guvna-rules.yml for config
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 RULES_YML="$REPO_ROOT/.guvna-rules.yml"
+REVIEW_MODEL=""
 if [ -f "$RULES_YML" ]; then
   if grep -qE '^\s*codex-review:\s*false' "$RULES_YML" 2>/dev/null; then
     exit 0
   fi
+  REVIEW_MODEL=$(grep -oP '^\s*codex-review-model:\s*"\K[^"]+' "$RULES_YML" 2>/dev/null || \
+                 grep -oP "^\s*codex-review-model:\s*'\K[^']+" "$RULES_YML" 2>/dev/null || \
+                 grep -oP '^\s*codex-review-model:\s*\K\S+' "$RULES_YML" 2>/dev/null || echo "")
+fi
+
+# Build model flag
+MODEL_FLAG=""
+if [ -n "$REVIEW_MODEL" ]; then
+  MODEL_FLAG="-c model=\"$REVIEW_MODEL\""
 fi
 
 # Get the commit SHA that was just created
@@ -45,7 +55,7 @@ REVIEW_FILE="/tmp/codex-review-${SHORT_SHA}.md"
 # Background the review — this script returns immediately
 (
   # Run codex review on the commit
-  REVIEW_OUTPUT=$(codex review --commit "$SHA" 2>&1) || true
+  REVIEW_OUTPUT=$(eval codex review --commit "$SHA" $MODEL_FLAG 2>&1) || true
 
   if [ -z "$REVIEW_OUTPUT" ]; then
     REVIEW_OUTPUT="No issues found."

@@ -86,6 +86,24 @@ guvna-rules (this plugin)       guvna (GitHub App)
 
 Both read `guvna.yml`. The plugin enforces during coding; the App enforces at PR time.
 
+## Optional
+
+### Codex review
+
+Independent code review from another model after each commit. Runs in the background — output goes to a temp file and PR comment, never enters context.
+
+Requires the [Codex CLI](https://github.com/openai/codex) installed separately.
+
+```yaml
+# .guvna-rules.yml
+codex-review: true
+codex-review-model: "o3"   # optional, defaults to codex's configured model
+```
+
+### Brain
+
+Semantic search over past work via a hosted knowledge base. Set `BRAIN_URL` and `BRAIN_API_KEY` env vars to connect. See `.mcp.json`.
+
 ## License
 
 MIT
